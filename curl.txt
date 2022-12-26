@@ -1,0 +1,71 @@
+# Custom Token
+curl -X POST http://localhost:8080/auth/realms/endpoint/custom-endpoint/token \
+  --verbose \
+  -G \
+  --data-urlencode "issuer=http://myssodemo.com" \
+  --data-urlencode "transactionID=3455445" \
+  --data-urlencode "transactionName=SomeTransactionName" | jq -r '.access_token'
+
+# Secure Token
+
+-- obtain Access Token for User1
+token=$(curl --location --request POST 'http://localhost:8080/auth/realms/endpoint/protocol/openid-connect/token' \
+  --verbose \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode 'client_id=custom-endpoint' \
+  --data-urlencode 'grant_type=password' \
+  --data-urlencode 'client_secret=be65ab0f-9352-4f41-b12c-1986d47a726d' \
+  --data-urlencode 'scope=openid' \
+  --data-urlencode 'username=user1' \
+  --data-urlencode 'password=user1' | jq -r '.access_token')
+
+curl -X POST http://localhost:8080/auth/realms/endpoint/custom-endpoint/secure/token \
+  --verbose \
+  -G \
+  -H "Accept: application/json" -H "Authorization: Bearer $token" \
+  --data-urlencode "issuer=http://myssodemo.com" \
+  --data-urlencode "transactionID=3455445" \
+  --data-urlencode "transactionName=SomeTransactionName" | jq -r '.access_token'
+
+# Secure JWT
+
+-- obtain Access Token for User1 (no special role)
+token=$(curl --location --request POST 'http://localhost:8080/auth/realms/endpoint/protocol/openid-connect/token' \
+--verbose \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=custom-endpoint' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'client_secret=be65ab0f-9352-4f41-b12c-1986d47a726d' \
+--data-urlencode 'scope=openid' \
+--data-urlencode 'username=user1' \
+--data-urlencode 'password=user1' | jq -r '.access_token')
+
+-- try to fetch a custom token (401 Error Expected)
+curl -X POST http://localhost:8080/auth/realms/endpoint/custom-endpoint/secure-jwt/token \
+  --verbose \
+  -G \
+  -H "Accept: application/json" -H "Authorization: Bearer $token" \
+  --data-urlencode "issuer=http://myssodemo.com" \
+  --data-urlencode "transactionID=3455445" \
+  --data-urlencode "transactionName=SomeTransactionName" | jq -r '.access_token'
+
+-- obtain Access Token for User2 (special role)
+token=$(curl --location --request POST 'http://localhost:8080/auth/realms/endpoint/protocol/openid-connect/token' \
+--verbose \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=custom-endpoint' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'client_secret=be65ab0f-9352-4f41-b12c-1986d47a726d' \
+--data-urlencode 'scope=openid' \
+--data-urlencode 'username=user2' \
+--data-urlencode 'password=user2' | jq -r '.access_token')
+
+-- try to fetch a custom token for User2 (200 Success Expected)
+curl -X POST http://localhost:8080/auth/realms/endpoint/custom-endpoint/secure-jwt/token \
+  --verbose \
+  -G \
+  -H "Accept: application/json" -H "Authorization: Bearer $token" \
+  --data-urlencode "issuer=http://myssodemo.com" \
+  --data-urlencode "transactionID=3455445" \
+  --data-urlencode "transactionName=SomeTransactionName" | jq -r '.access_token'
+
