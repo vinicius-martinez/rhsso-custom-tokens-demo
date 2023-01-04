@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 
 import org.keycloak.TokenVerifier;
 import org.keycloak.common.VerificationException;
+import org.keycloak.jose.jws.Algorithm;
 import org.keycloak.jose.jws.JWSBuilder;
 import org.keycloak.models.KeyManager;
 import org.keycloak.models.KeycloakSession;
@@ -101,6 +102,7 @@ public class CustomEndpointProvider implements RealmResourceProvider {
     private boolean isValidJwt(String token){
         try {
             AccessToken accessToken = TokenVerifier.create(token, AccessToken.class).getToken();
+            Algorithm algorithm = Algorithm.valueOf(null);
             return accessToken.getRealmAccess().getRoles().contains(SPECIAL_ROLE);
         } catch (VerificationException e) {
             System.out.println("Error checking token");
